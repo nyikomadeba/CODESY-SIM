@@ -46,7 +46,9 @@ Each button is a Rectangle or Button shape with a Toggle/Tap action.
 ### 4. FAULT RESET Button
 - Shape: Rectangle (yellow fill)
 - Label: **FAULT RESET**
-- OnMouseClick → Toggle variable: `PLC_PRG.FaultReset`
+- Use momentary action on `PLC_PRG.FaultReset`:
+  - MouseDown: Write `TRUE`
+  - MouseUp: Write `FALSE`
 
 ---
 
@@ -90,7 +92,7 @@ Read-only indicator rectangles or circles:
 ### 13. STATE display
 - Shape: Rectangle (text box)
 - Text variable output: `PLC_PRG.State`
-  *(CODESYS displays the enum name automatically, e.g. "S_Idle", "S_Fill")*
+  *(State is an INT; use a text list/expression if you want names.)*
 - Color animation by integer value:
 
 | Value | State name | Colour |

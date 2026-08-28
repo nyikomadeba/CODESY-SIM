@@ -24,9 +24,9 @@ README.md
 |---|---|---|
 | `Capper : FALSE;` compiler error | Assignment written in Declaration section | Use `:=` in Implementation; use `: BOOL := FALSE;` in Declaration |
 | `tFill_PT : R_TRIG` type mismatch | Wrong type pasted (R_TRIG instead of TIME) | Declare `tFill_PT : TIME := T#5s;` in PLC_PRG declaration |
-| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type used instead of custom | Define local `T_State` enum in PLC_PRG declaration |
+| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type mismatch | Use integer state constants (`S_Idle..S_Fault`) in PLC_PRG declaration |
 | FB calls in Declaration section | ST code pasted into wrong editor tab | All FB calls and assignments are in PLC_PRG Implementation only |
-| `No CASE label found` | STATE enum mismatch/placement issue | Keep `T_State` declaration above `VAR` in PLC_PRG declaration |
+| `No CASE label found` | STATE labels/type mismatch | Use `State : INT` + matching `VAR CONSTANT` state labels in PLC_PRG declaration |
 
 ---
 
@@ -56,7 +56,7 @@ README.md
 
 1. Open `PLC_PRG` (created automatically with the Standard Project).
 2. Click the **Declaration** tab → paste the Declaration section from
-   `src/PLC_PRG.st` (`TYPE ... END_TYPE` and `VAR ... END_VAR`).
+   `src/PLC_PRG.st` (`VAR CONSTANT ... END_VAR` and `VAR ... END_VAR`).
 3. Click the **Implementation** tab → paste the Implementation section
    from `src/PLC_PRG.st`.
 4. Save (Ctrl+S).
@@ -100,6 +100,9 @@ In summary:
 
 Run this sequence in order on the HMI page:
 
+> Note: E-STOP latches `Fault`; after releasing E-STOP you must pulse
+> **FAULT RESET** to return to `S_Idle`.
+
 | Step | Action | Expected result |
 |------|--------|-----------------|
 | 1 | Click **START** | `RunLatch = TRUE`, `State → S_WaitBottle`, Conveyor ON, Green lamp ON |
@@ -109,7 +112,7 @@ Run this sequence in order on the HMI page:
 | 5 | Wait 3 s (tEject_PT) | `State → S_WaitBottle` (ready for next bottle) |
 | 6 | Click **STOP** | `RunLatch = FALSE`, `State → S_Idle`, all outputs OFF |
 | 7 | Click **E-STOP** | `Fault = TRUE`, `State → S_Fault`, Red lamp + Alarm ON |
-| 8 | Release E-STOP, click **FAULT RESET** | `Fault = FALSE`, `State → S_Idle` |
+| 8 | Release E-STOP (set `EStop=FALSE`), then click **FAULT RESET** | `Fault = FALSE`, `State → S_Idle` |
 | 9 | Toggle **LOW LEVEL** | `Fault = TRUE`, `State → S_Fault` |
 
 ---
@@ -133,7 +136,7 @@ Run this sequence in order on the HMI page:
 | `RunLatch` | BOOL | Start/Stop latch |
 | `SystemEnable` | BOOL | Master enable (derived) |
 | `Fault` | BOOL | Fault latch |
-| `State` | T_State | State machine state |
+| `State` | INT | State machine state (`S_Idle..S_Fault`) |
 | `tFill_PT` | TIME | Fill timer preset (default 5 s) |
 | `tCap_PT` | TIME | Cap timer preset (default 2 s) |
 | `tEject_PT` | TIME | Eject timer preset (default 3 s) |

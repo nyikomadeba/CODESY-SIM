@@ -10,16 +10,14 @@
 (* ================================================================
    PLC_PRG — Declaration (paste in Declaration tab)
    ================================================================ *)
-TYPE
-  T_State : (
-    S_Idle,
-    S_WaitBottle,
-    S_Fill,
-    S_Cap,
-    S_Eject,
-    S_Fault
-  );
-END_TYPE
+VAR CONSTANT
+  S_Idle       : INT := 0;
+  S_WaitBottle : INT := 1;
+  S_Fill       : INT := 2;
+  S_Cap        : INT := 3;
+  S_Eject      : INT := 4;
+  S_Fault      : INT := 5;
+END_VAR
 
 VAR
   (* Inputs *)
@@ -42,7 +40,7 @@ VAR
   RunLatch      : BOOL := FALSE;
   SystemEnable  : BOOL := FALSE;
   Fault         : BOOL := FALSE;
-  State         : T_State := S_Idle;
+  State         : INT := 0; (* S_Idle *)
 
   (* FB instances *)
   tFill         : TON;
@@ -50,6 +48,7 @@ VAR
   tEject        : TON;
   rStart        : R_TRIG;
   rBottle       : R_TRIG;
+  rFaultReset   : R_TRIG;
 
   (* Timer presets *)
   tFill_PT      : TIME := T#5s;
@@ -64,6 +63,7 @@ END_VAR
 (* Step 1: Edge detectors *)
 rStart(CLK := StartPB);
 rBottle(CLK := BottleSensor);
+rFaultReset(CLK := FaultReset);
 
 (* Step 2: Start/Stop latch *)
 IF rStart.Q THEN
@@ -73,19 +73,26 @@ IF StopPB OR EStop THEN
     RunLatch := FALSE;
 END_IF;
 
-(* Step 3: Master enable *)
-SystemEnable := RunLatch AND NOT Fault AND NOT EStop;
-
-(* Step 4: Fault conditions *)
+(* Step 3: Fault conditions *)
+(* EStop is latched into Fault and requires FaultReset after EStop release. *)
 IF EStop OR LowLevel THEN
     Fault := TRUE;
 END_IF;
-IF FaultReset AND NOT EStop AND NOT LowLevel THEN
+IF rFaultReset.Q AND NOT EStop AND NOT LowLevel THEN
     Fault := FALSE;
     RunLatch := FALSE;
 END_IF;
 
-(* Step 5: State machine *)
+(* Step 4: Master enable *)
+(* Keep NOT EStop explicitly for immediate disable on the same scan as EStop press. *)
+SystemEnable := RunLatch AND NOT Fault AND NOT EStop;
+
+(* Step 5: Timers *)
+tFill(IN := (State = S_Fill) AND SystemEnable, PT := tFill_PT);
+tCap(IN := (State = S_Cap) AND SystemEnable, PT := tCap_PT);
+tEject(IN := (State = S_Eject) AND SystemEnable, PT := tEject_PT);
+
+(* Step 6: State machine *)
 CASE State OF
   S_Idle:
     ConveyorMotor := FALSE;
@@ -108,40 +115,31 @@ CASE State OF
 
   S_Fill:
     FillValve := TRUE;
-    tFill(IN := TRUE, PT := tFill_PT);
     IF NOT SystemEnable THEN
-        tFill(IN := FALSE, PT := tFill_PT);
         FillValve := FALSE;
         State := S_Idle;
     ELSIF tFill.Q THEN
         FillValve := FALSE;
-        tFill(IN := FALSE, PT := tFill_PT);
         State := S_Cap;
     END_IF;
 
   S_Cap:
     Capper := TRUE;
-    tCap(IN := TRUE, PT := tCap_PT);
     IF NOT SystemEnable THEN
-        tCap(IN := FALSE, PT := tCap_PT);
         Capper := FALSE;
         State := S_Idle;
     ELSIF tCap.Q THEN
         Capper := FALSE;
-        tCap(IN := FALSE, PT := tCap_PT);
         State := S_Eject;
     END_IF;
 
   S_Eject:
     ConveyorMotor := TRUE;
-    tEject(IN := TRUE, PT := tEject_PT);
     IF NOT SystemEnable THEN
-        tEject(IN := FALSE, PT := tEject_PT);
         ConveyorMotor := FALSE;
         State := S_Idle;
     ELSIF tEject.Q THEN
         ConveyorMotor := FALSE;
-        tEject(IN := FALSE, PT := tEject_PT);
         State := S_WaitBottle;
     END_IF;
 
@@ -154,18 +152,15 @@ CASE State OF
     END_IF;
 END_CASE;
 
-(* Step 6: Force fault state and reset timers *)
+(* Step 7: Force fault state and reset timers *)
 IF Fault AND State <> S_Fault THEN
     ConveyorMotor := FALSE;
     FillValve := FALSE;
     Capper := FALSE;
-    tFill(IN := FALSE, PT := tFill_PT);
-    tCap(IN := FALSE, PT := tCap_PT);
-    tEject(IN := FALSE, PT := tEject_PT);
     State := S_Fault;
 END_IF;
 
-(* Step 7: Lamps and alarm *)
-GreenLamp := SystemEnable AND NOT Fault;
+(* Step 8: Lamps and alarm *)
+GreenLamp := SystemEnable;
 RedLamp := Fault OR EStop;
 AlarmBuzzer := Fault;
