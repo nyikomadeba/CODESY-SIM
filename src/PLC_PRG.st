@@ -80,7 +80,7 @@ SystemEnable := RunLatch AND NOT Fault AND NOT EStop;
 IF EStop OR LowLevel THEN
     Fault := TRUE;
 END_IF;
-IF FaultReset AND NOT EStop THEN
+IF FaultReset AND NOT EStop AND NOT LowLevel THEN
     Fault := FALSE;
     RunLatch := FALSE;
 END_IF;
@@ -156,6 +156,9 @@ END_CASE;
 
 (* Step 6: Force fault state and reset timers *)
 IF Fault AND State <> S_Fault THEN
+    ConveyorMotor := FALSE;
+    FillValve := FALSE;
+    Capper := FALSE;
     tFill(IN := FALSE, PT := tFill_PT);
     tCap(IN := FALSE, PT := tCap_PT);
     tEject(IN := FALSE, PT := tEject_PT);
