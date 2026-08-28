@@ -2,6 +2,9 @@
 
 Step-by-step instructions for creating the HMI (Visualization) page in CODESYS.
 
+> Variable paths below assume MainTask runs the program instance named `PLC_PRG`.
+> If you rename the task POU instance, update bindings to `<YourInstance>.VariableName`.
+
 **How to create in CODESYS:**
 > *Project → Add Object → Visualization → name it `HMI_Main`*  
 > Add the elements below using the Visualization Toolbox.
@@ -21,29 +24,29 @@ Each button is a Rectangle or Button shape with a Toggle/Tap action.
 ### 1. START Button
 - Shape: Rectangle (green fill)
 - Label: **START**
-- OnMouseClick → Toggle variable: `GVL_vars.StartPB`
+- OnMouseClick → Toggle variable: `PLC_PRG.StartPB`
   *(Tap action recommended: TRUE on press, FALSE on release — simulates momentary pushbutton)*
-- Color animation → `GVL_vars.RunLatch`
+- Color animation → `PLC_PRG.RunLatch`
   - TRUE  → bright green `#00FF00`
   - FALSE → dark green   `#006600`
 
 ### 2. STOP Button
 - Shape: Rectangle (red fill)
 - Label: **STOP**
-- OnMouseClick → Toggle variable: `GVL_vars.StopPB`
+- OnMouseClick → Toggle variable: `PLC_PRG.StopPB`
 
 ### 3. E-STOP Button
 - Shape: Rectangle (orange/red fill)
 - Label: **E-STOP**
-- OnMouseClick → Toggle variable: `GVL_vars.EStop`
-- Color animation → `GVL_vars.EStop`
+- OnMouseClick → Toggle variable: `PLC_PRG.EStop`
+- Color animation → `PLC_PRG.EStop`
   - TRUE  → bright red `#FF0000`
   - FALSE → grey       `#888888`
 
 ### 4. FAULT RESET Button
 - Shape: Rectangle (yellow fill)
 - Label: **FAULT RESET**
-- OnMouseClick → Toggle variable: `GVL_vars.FaultReset`
+- OnMouseClick → Toggle variable: `PLC_PRG.FaultReset`
 
 ---
 
@@ -52,16 +55,16 @@ Each button is a Rectangle or Button shape with a Toggle/Tap action.
 ### 5. BOTTLE SENSOR Button
 - Shape: Rectangle (blue fill)
 - Label: **BOTTLE PRESENT**
-- OnMouseClick → Toggle variable: `GVL_vars.BottleSensor`
-- Color animation → `GVL_vars.BottleSensor`
+- OnMouseClick → Toggle variable: `PLC_PRG.BottleSensor`
+- Color animation → `PLC_PRG.BottleSensor`
   - TRUE  → bright blue `#0000FF`
   - FALSE → grey        `#888888`
 
 ### 6. LOW LEVEL Button
 - Shape: Rectangle
 - Label: **LOW LEVEL**
-- OnMouseClick → Toggle variable: `GVL_vars.LowLevel`
-- Color animation → `GVL_vars.LowLevel`
+- OnMouseClick → Toggle variable: `PLC_PRG.LowLevel`
+- Color animation → `PLC_PRG.LowLevel`
   - TRUE  → orange `#FF8800`
   - FALSE → grey   `#888888`
 
@@ -73,12 +76,12 @@ Read-only indicator rectangles or circles:
 
 | # | Label | Variable | ON colour | OFF colour |
 |---|-------|----------|-----------|------------|
-| 7 | CONVEYOR | `GVL_vars.ConveyorMotor` | `#00CC00` green | `#AAAAAA` grey |
-| 8 | FILL VALVE | `GVL_vars.FillValve` | `#0099FF` blue | `#AAAAAA` grey |
-| 9 | CAPPER | `GVL_vars.Capper` | `#FFFF00` yellow | `#AAAAAA` grey |
-| 10 | ALARM | `GVL_vars.AlarmBuzzer` | `#FF0000` red | `#AAAAAA` grey |
-| 11 | RUN LAMP | `GVL_vars.GreenLamp` | `#00FF00` green | `#AAAAAA` grey |
-| 12 | FAULT LAMP | `GVL_vars.RedLamp` | `#FF0000` red | `#AAAAAA` grey |
+| 7 | CONVEYOR | `PLC_PRG.ConveyorMotor` | `#00CC00` green | `#AAAAAA` grey |
+| 8 | FILL VALVE | `PLC_PRG.FillValve` | `#0099FF` blue | `#AAAAAA` grey |
+| 9 | CAPPER | `PLC_PRG.Capper` | `#FFFF00` yellow | `#AAAAAA` grey |
+| 10 | ALARM | `PLC_PRG.AlarmBuzzer` | `#FF0000` red | `#AAAAAA` grey |
+| 11 | RUN LAMP | `PLC_PRG.GreenLamp` | `#00FF00` green | `#AAAAAA` grey |
+| 12 | FAULT LAMP | `PLC_PRG.RedLamp` | `#FF0000` red | `#AAAAAA` grey |
 
 ---
 
@@ -86,7 +89,7 @@ Read-only indicator rectangles or circles:
 
 ### 13. STATE display
 - Shape: Rectangle (text box)
-- Text variable output: `GVL_vars.State`
+- Text variable output: `PLC_PRG.State`
   *(CODESYS displays the enum name automatically, e.g. "S_Idle", "S_Fill")*
 - Color animation by integer value:
 
@@ -101,7 +104,7 @@ Read-only indicator rectangles or circles:
 
 ### 14. SYSTEM ENABLE indicator
 - Label: **SYSTEM ENABLE**
-- Color animation → `GVL_vars.SystemEnable`
+- Color animation → `PLC_PRG.SystemEnable`
   - TRUE  → green `#00CC00`
   - FALSE → grey  `#AAAAAA`
 
@@ -127,7 +130,7 @@ A simple rectangle representing the bottle:
 2. Properties panel → expand **Color** → **Fill Color**.
 3. Click **`...`** next to "Color" to open the Color animation dialog.
 4. Enable **"Use expression"**.
-5. Enter the variable path, e.g. `GVL_vars.ConveyorMotor`.
+5. Enter the variable path, e.g. `PLC_PRG.ConveyorMotor`.
 6. Add colour entries:
    - Value `TRUE` → choose green
    - Value `FALSE` → choose grey
@@ -138,6 +141,6 @@ A simple rectangle representing the bottle:
 
 1. Select the button shape.
 2. Properties → **Input Configuration** → **OnMouseClick**.
-3. Action: **"Toggle variable"** → enter path, e.g. `GVL_vars.StartPB`.
+3. Action: **"Toggle variable"** → enter path, e.g. `PLC_PRG.StartPB`.
 4. For momentary simulation use **"Write value"** with value `TRUE` on
    MouseDown and `FALSE` on MouseUp (two separate actions).

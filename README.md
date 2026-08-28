@@ -10,8 +10,8 @@ with a simple HMI Visualization page for simulation.
 
 ```
 src/
-  GVL_vars.st          ← Global Variable List (TYPE + VAR_GLOBAL)
-  PLC_PRG.st           ← Main program (implementation only)
+  PLC_PRG.st           ← Main program (Declaration + Implementation)
+  GVL_vars.st          ← Optional empty GVL (not required for runtime flow)
   HMI_Visualization.md ← HMI page layout instructions
 README.md
 ```
@@ -23,10 +23,10 @@ README.md
 | Previous error | Root cause | Fix |
 |---|---|---|
 | `Capper : FALSE;` compiler error | Assignment written in Declaration section | Use `:=` in Implementation; use `: BOOL := FALSE;` in Declaration |
-| `tFill_PT : R_TRIG` type mismatch | Wrong type pasted (R_TRIG instead of TIME) | Changed to `tFill_PT : TIME := T#5s;` in GVL_vars.st |
-| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type used instead of custom | Defined own `T_State` enum in GVL_vars.st |
+| `tFill_PT : R_TRIG` type mismatch | Wrong type pasted (R_TRIG instead of TIME) | Declare `tFill_PT : TIME := T#5s;` in PLC_PRG declaration |
+| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type used instead of custom | Define local `T_State` enum in PLC_PRG declaration |
 | FB calls in Declaration section | ST code pasted into wrong editor tab | All FB calls and assignments are in PLC_PRG Implementation only |
-| `No CASE label found` | STATE enum declared after or separately from CASE | TYPE declared at top of same GVL, before VAR_GLOBAL |
+| `No CASE label found` | STATE enum mismatch/placement issue | Keep `T_State` declaration above `VAR` in PLC_PRG declaration |
 
 ---
 
@@ -52,32 +52,23 @@ README.md
 
 - *Project → Library Manager → Add library… → "Standard"*
 
-### 3 — Create the Global Variable List
-
-1. *Project → Add Object → Global Variable List → name it `GVL_vars`*.
-2. Open `GVL_vars` in the editor (Declaration area).
-3. **Replace** the entire content with the text from `src/GVL_vars.st`.
-4. Save (Ctrl+S).
-
-### 4 — Edit PLC_PRG
+### 3 — Edit PLC_PRG (core variables now live here)
 
 1. Open `PLC_PRG` (created automatically with the Standard Project).
-2. Click the **Declaration** tab → ensure it contains only:
-   ```pascal
-   VAR
-   END_VAR
-   ```
-3. Click the **Implementation** tab → **replace** all content with
-   the text from `src/PLC_PRG.st` (paste everything after the header
-   comment — i.e. from `(* Step 1 *)` onwards).
+2. Click the **Declaration** tab → paste the Declaration section from
+   `src/PLC_PRG.st` (`TYPE ... END_TYPE` and `VAR ... END_VAR`).
+3. Click the **Implementation** tab → paste the Implementation section
+   from `src/PLC_PRG.st`.
 4. Save (Ctrl+S).
 
-### 5 — Assign PLC_PRG to MainTask
+### 4 — Assign PLC_PRG to MainTask
 
 - *Application → Task Configuration → MainTask → Add POU Instance →
   select `PLC_PRG`* (if not already listed).
+- Ensure the program instance name is `PLC_PRG` so visualization paths
+  like `PLC_PRG.StartPB` resolve directly.
 
-### 6 — Build
+### 5 — Build
 
 - *Build → Build* (Ctrl+F7).
 - Expected: **0 errors, 0 warnings** (or only info-level warnings).
@@ -123,7 +114,7 @@ Run this sequence in order on the HMI page:
 
 ---
 
-## Variable quick reference
+## Variable quick reference (PLC_PRG declaration)
 
 | Variable | Type | Purpose |
 |---|---|---|
@@ -160,3 +151,13 @@ S_Eject ──[tEject done]──► S_WaitBottle  (loop)
 Any state ──[Fault]──► S_Fault
 S_Fault ──[Fault cleared]──► S_Idle
 ```
+
+---
+
+## Notes on declaration scope
+
+- Runtime inputs/outputs, latches, timers, triggers, and state flags are
+  declared in `PLC_PRG` Declaration (POU scope), not required from GVL.
+- `src/GVL_vars.st` is intentionally optional/empty for this simple demo.
+- If you rename the `PLC_PRG` task instance, update HMI bindings from
+  `PLC_PRG.<Variable>` to `<NewInstance>.<Variable>`.
