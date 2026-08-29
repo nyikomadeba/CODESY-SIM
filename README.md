@@ -58,13 +58,13 @@ README.md
 
 1. *Project → Add Object → Global Variable List → name it `MachineIO`*.
 2. Open `MachineIO` in the editor (Declaration area).
-3. **Replace** the entire content with `/home/runner/work/CODESY-SIM/CODESY-SIM/src/MachineIO.st`.
+3. **Replace** the entire content with `src/MachineIO.st`.
 4. Save (Ctrl+S).
 
 ### 4 — Build ladder networks in PLC_PRG
 
 1. Open `PLC_PRG` (created automatically with the Standard Project).
-2. Follow `/home/runner/work/CODESY-SIM/CODESY-SIM/src/PLC_PRG_LD_Microsteps.md`.
+2. Follow `src/PLC_PRG_LD_Microsteps.md`.
 3. Build networks 1→11 exactly in order.
 4. Save (Ctrl+S).
 
@@ -136,5 +136,5 @@ Use a watch window and force/toggle these inputs:
 ## Legacy ST workflow (optional)
 
 If you want the older Structured Text version, use:
-- `/home/runner/work/CODESY-SIM/CODESY-SIM/src/GVL_vars.st`
-- `/home/runner/work/CODESY-SIM/CODESY-SIM/src/PLC_PRG.st`
+- `src/GVL_vars.st`
+- `src/PLC_PRG.st`

@@ -8,7 +8,7 @@ Use this to build `PLC_PRG` in **Ladder Diagram (LD)** using `MachineIO` variabl
 2. Device: **CODESYS Control Win V3 x64**.
 3. Language for `PLC_PRG`: **Ladder Diagram (LD)**.
 4. Add Standard library (for `TON`).
-5. Add a GVL named `MachineIO` and paste `/home/runner/work/CODESY-SIM/CODESY-SIM/src/MachineIO.st`.
+5. Add a GVL named `MachineIO` and paste `src/MachineIO.st`.
 
 ---
 
@@ -123,4 +123,3 @@ This ensures all sequence steps drop out in fault/stop conditions.
    - Auto cap 2s, eject 3s, back to wait bottle.
    - LowLiquidLevelSensor ON (or EmergencyStop ON) → fault + alarm.
    - EmergencyStop OFF, ResetFaultButton pulse → fault clears.
-
