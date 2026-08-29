@@ -43,7 +43,7 @@ Use this to build `PLC_PRG` in **Ladder Diagram (LD)** using `MachineIO` variabl
 ## Network 5 — Step initialization
 
 - `MachineEnabled` (NO) AND `NOT StepWaitBottle` (NC) AND `NOT StepFill` (NC) AND `NOT StepCap` (NC) AND `NOT StepEject` (NC) → **S coil** `StepWaitBottle`
-- `NOT MachineEnabled` (NC used as TRUE when disabled) → **R coils** for all step bits:
+- `NOT MachineEnabled` (NC contact passes when `MachineEnabled = FALSE`) → **R coils** for all step bits:
   - `StepWaitBottle`
   - `StepFill`
   - `StepCap`
@@ -64,7 +64,7 @@ Use this to build `PLC_PRG` in **Ladder Diagram (LD)** using `MachineIO` variabl
 
 - Output rung: `StepFill` (NO) AND `MachineEnabled` (NO) → (coil) `FillValve`
 - Timer call rung: `StepFill` (NO) AND `MachineEnabled` (NO) → call `FillTimer(IN:=TRUE, PT:=FillTimerPreset)`
-- Timer reset rung (optional explicit reset): `NOT StepFill` (NC open when false) OR `NOT MachineEnabled` → call `FillTimer(IN:=FALSE, PT:=FillTimerPreset)`
+- Timer reset rung (optional explicit reset): `NOT StepFill` (NC contact passes when FALSE) OR `NOT MachineEnabled` → call `FillTimer(IN:=FALSE, PT:=FillTimerPreset)`
 - Transition rung when timer done:
   - `StepFill` (NO) AND `FillTimer.Q` (NO) → **S coil** `StepCap`
   - `StepFill` (NO) AND `FillTimer.Q` (NO) → **R coil** `StepFill`
@@ -95,12 +95,14 @@ Use this to build `PLC_PRG` in **Ladder Diagram (LD)** using `MachineIO` variabl
 
 ## Network 10 — Fault override (safe state)
 
-- `FaultActive` (NO) OR `NOT MachineEnabled` → **R coil** `StepFill`
-- `FaultActive` (NO) OR `NOT MachineEnabled` → **R coil** `StepCap`
-- `FaultActive` (NO) OR `NOT MachineEnabled` → **R coil** `StepEject`
-- `FaultActive` (NO) OR `NOT MachineEnabled` → **R coil** `StepWaitBottle`
+- `FaultActive` (NO) OR `NOT MachineEnabled` (NC) → **R coil** `StepFill`
+- `FaultActive` (NO) OR `NOT MachineEnabled` (NC) → **R coil** `StepCap`
+- `FaultActive` (NO) OR `NOT MachineEnabled` (NC) → **R coil** `StepEject`
+- `FaultActive` (NO) OR `NOT MachineEnabled` (NC) → **R coil** `StepWaitBottle`
 
-This ensures all sequence steps drop out in fault/stop conditions.
+This ensures all step bits drop out in fault/stop conditions.
+During normal running, `FaultActive = FALSE` and `MachineEnabled = TRUE`, so
+the reset rungs in this network do not fire.
 
 ---
 
@@ -118,8 +120,8 @@ This ensures all sequence steps drop out in fault/stop conditions.
 2. Start Control Win runtime.
 3. Login (**Ctrl+L**) and Start (**F5**).
 4. Force/toggle inputs in watch:
-   - StartButton ON then OFF → `MachineRunning` and `MachineEnabled` go TRUE, then machine enters wait bottle.
-   - BottlePresentSensor ON then OFF → fill for 5s.
+   - Pulse `StartButton` → `MachineRunning` and `MachineEnabled` go TRUE, then machine enters wait bottle.
+   - Set `BottlePresentSensor` TRUE to trigger fill for 5s.
    - Auto cap 2s, eject 3s, back to wait bottle.
    - LowLiquidLevelSensor ON (or EmergencyStop ON) → fault + alarm.
    - EmergencyStop OFF, ResetFaultButton pulse → fault clears.

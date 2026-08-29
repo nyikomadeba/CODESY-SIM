@@ -95,7 +95,7 @@ Use a watch window and force/toggle these inputs:
 | Step | Action | Expected result |
 |---|---|---|
 | 1 | Pulse `StartButton` | `MachineRunning = TRUE`, `StepWaitBottle = TRUE`, `ConveyorMotor = TRUE` |
-| 2 | Pulse `BottlePresentSensor` | `StepFill = TRUE`, `FillValve = TRUE` |
+| 2 | Set `BottlePresentSensor` TRUE | `StepFill = TRUE`, `FillValve = TRUE` |
 | 3 | Wait 5 s | `StepCap = TRUE`, `CapperMotor = TRUE` |
 | 4 | Wait 2 s | `StepEject = TRUE`, `ConveyorMotor = TRUE` |
 | 5 | Wait 3 s | `StepWaitBottle = TRUE` (loop complete) |
