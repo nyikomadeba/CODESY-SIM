@@ -1,8 +1,8 @@
-# CODESY-SIM — Bottle-Filling PLC (Ladder / ST) + HMI Simulation
+# CODESY-SIM — Bottle-Filling PLC (Code-First LD + ST) + HMI Simulation
 
-A beginner-friendly CODESYS project that implements a bottle-filling
-station using Structured Text (equivalent to Ladder Diagram logic),
-with a simple HMI Visualization page for simulation.
+A beginner-friendly CODESYS project for a bottle-filling station.
+It now includes a **code-first Ladder Diagram (LD) workflow** with
+plain-English variable names, plus the earlier ST version.
 
 ---
 
@@ -10,6 +10,8 @@ with a simple HMI Visualization page for simulation.
 
 ```
 src/
+  MachineIO.st              ← Plain-English GVL for LD workflow
+  PLC_PRG_LD_Microsteps.md  ← Rung-by-rung LD build instructions
   GVL_vars.st          ← Global Variable List (TYPE + VAR_GLOBAL)
   PLC_PRG.st           ← Main program (implementation only)
   HMI_Visualization.md ← HMI page layout instructions
@@ -40,13 +42,13 @@ README.md
 
 ---
 
-## How to open / build
+## Recommended: code-first LD workflow (no visualization yet)
 
 ### 1 — Create a new CODESYS project
 
 1. Open CODESYS → *File → New Project → Standard Project*.
 2. Select device: **CODESYS Control Win V3 x64**.
-3. Language: choose **Structured Text (ST)** for `PLC_PRG`.
+3. Language: choose **Ladder Diagram (LD)** for `PLC_PRG`.
 
 ### 2 — Add Standard library
 
@@ -54,22 +56,16 @@ README.md
 
 ### 3 — Create the Global Variable List
 
-1. *Project → Add Object → Global Variable List → name it `GVL_vars`*.
-2. Open `GVL_vars` in the editor (Declaration area).
-3. **Replace** the entire content with the text from `src/GVL_vars.st`.
+1. *Project → Add Object → Global Variable List → name it `MachineIO`*.
+2. Open `MachineIO` in the editor (Declaration area).
+3. **Replace** the entire content with `/home/runner/work/CODESY-SIM/CODESY-SIM/src/MachineIO.st`.
 4. Save (Ctrl+S).
 
-### 4 — Edit PLC_PRG
+### 4 — Build ladder networks in PLC_PRG
 
 1. Open `PLC_PRG` (created automatically with the Standard Project).
-2. Click the **Declaration** tab → ensure it contains only:
-   ```pascal
-   VAR
-   END_VAR
-   ```
-3. Click the **Implementation** tab → **replace** all content with
-   the text from `src/PLC_PRG.st` (paste everything after the header
-   comment — i.e. from `(* Step 1 *)` onwards).
+2. Follow `/home/runner/work/CODESY-SIM/CODESY-SIM/src/PLC_PRG_LD_Microsteps.md`.
+3. Build networks 1→11 exactly in order.
 4. Save (Ctrl+S).
 
 ### 5 — Assign PLC_PRG to MainTask
@@ -84,7 +80,7 @@ README.md
 
 ---
 
-## How to run in CODESYS Control Win V3 x64
+## How to run in CODESYS Control Win V3 x64 (code-only)
 
 1. Start the CODESYS Control Win V3 runtime (system tray icon or
    *Tools → CODESYS Control Win V3 x64 → Start*).
@@ -92,71 +88,53 @@ README.md
    target → *Yes* to download.
 3. *Debug → Start* (F5) to run.
 
----
+## Micro-test sequence (code-only)
 
-## How to create the HMI Visualization
-
-Follow the step-by-step instructions in `src/HMI_Visualization.md`.
-In summary:
-
-1. *Project → Add Object → Visualization → name it `HMI_Main`*.
-2. Add button and indicator shapes as described in that file.
-3. Link variables using the Properties panel → Input/Color animation.
-
----
-
-## How to test the sequence via HMI
-
-Run this sequence in order on the HMI page:
+Use a watch window and force/toggle these inputs:
 
 | Step | Action | Expected result |
 |------|--------|-----------------|
-| 1 | Click **START** | `RunLatch = TRUE`, `State → S_WaitBottle`, Conveyor ON, Green lamp ON |
-| 2 | Click **BOTTLE PRESENT** | `State → S_Fill`, Fill Valve ON |
-| 3 | Wait 5 s (tFill_PT) | `State → S_Cap`, Capper ON |
-| 4 | Wait 2 s (tCap_PT) | `State → S_Eject`, Conveyor ON |
-| 5 | Wait 3 s (tEject_PT) | `State → S_WaitBottle` (ready for next bottle) |
-| 6 | Click **STOP** | `RunLatch = FALSE`, `State → S_Idle`, all outputs OFF |
-| 7 | Click **E-STOP** | `Fault = TRUE`, `State → S_Fault`, Red lamp + Alarm ON |
-| 8 | Release E-STOP, click **FAULT RESET** | `Fault = FALSE`, `State → S_Idle` |
-| 9 | Toggle **LOW LEVEL** | `Fault = TRUE`, `State → S_Fault` |
+| 1 | Pulse `StartButton` | `MachineRunning = TRUE`, `StepWaitBottle = TRUE`, `ConveyorMotor = TRUE` |
+| 2 | Pulse `BottlePresentSensor` | `StepFill = TRUE`, `FillValve = TRUE` |
+| 3 | Wait 5 s | `StepCap = TRUE`, `CapperMotor = TRUE` |
+| 4 | Wait 2 s | `StepEject = TRUE`, `ConveyorMotor = TRUE` |
+| 5 | Wait 3 s | `StepWaitBottle = TRUE` (loop complete) |
+| 6 | Set `LowLiquidLevelSensor` TRUE (or `EmergencyStop` TRUE) | `FaultActive = TRUE`, `AlarmBuzzer = TRUE`, sequence stops |
+| 7 | Clear E-stop, pulse `ResetFaultButton` | `FaultActive = FALSE`, `MachineRunning = FALSE` |
 
 ---
 
-## Variable quick reference
+## Variable quick reference (plain-English LD set)
 
 | Variable | Type | Purpose |
 |---|---|---|
-| `StartPB` | BOOL | Momentary Start pushbutton |
-| `StopPB` | BOOL | Stop pushbutton |
-| `EStop` | BOOL | Emergency Stop (active TRUE) |
-| `BottleSensor` | BOOL | Bottle present sensor |
-| `LowLevel` | BOOL | Low fluid level |
-| `FaultReset` | BOOL | Fault reset (momentary) |
+| `StartButton` | BOOL | Momentary Start pushbutton |
+| `StopButton` | BOOL | Stop pushbutton |
+| `EmergencyStop` | BOOL | Emergency stop (active TRUE) |
+| `BottlePresentSensor` | BOOL | Simulated digital bottle sensor (real world: photoelectric) |
+| `LowLiquidLevelSensor` | BOOL | Simulated digital low-level sensor (real world: float/level switch) |
+| `ResetFaultButton` | BOOL | Fault reset (momentary) |
 | `ConveyorMotor` | BOOL | Conveyor output |
 | `FillValve` | BOOL | Fill valve output |
-| `Capper` | BOOL | Capper output |
+| `CapperMotor` | BOOL | Capper output |
 | `AlarmBuzzer` | BOOL | Alarm output |
-| `GreenLamp` | BOOL | Running indicator |
-| `RedLamp` | BOOL | Fault/Stop indicator |
-| `RunLatch` | BOOL | Start/Stop latch |
-| `SystemEnable` | BOOL | Master enable (derived) |
-| `Fault` | BOOL | Fault latch |
-| `State` | T_State | State machine state |
-| `tFill_PT` | TIME | Fill timer preset (default 5 s) |
-| `tCap_PT` | TIME | Cap timer preset (default 2 s) |
-| `tEject_PT` | TIME | Eject timer preset (default 3 s) |
+| `RunLight` | BOOL | Running indicator |
+| `FaultLight` | BOOL | Fault/Stop indicator |
+| `MachineRunning` | BOOL | Start/Stop latch |
+| `MachineEnabled` | BOOL | Master enable (derived) |
+| `FaultActive` | BOOL | Fault latch |
+| `StepWaitBottle` | BOOL | Sequence step bit |
+| `StepFill` | BOOL | Sequence step bit |
+| `StepCap` | BOOL | Sequence step bit |
+| `StepEject` | BOOL | Sequence step bit |
+| `FillTimerPreset` | TIME | Fill timer preset (default 5 s) |
+| `CapTimerPreset` | TIME | Cap timer preset (default 2 s) |
+| `EjectTimerPreset` | TIME | Eject timer preset (default 3 s) |
 
 ---
 
-## State machine overview
+## Legacy ST workflow (optional)
 
-```
-S_Idle ──[SystemEnable]──► S_WaitBottle
-S_WaitBottle ──[Bottle detected]──► S_Fill
-S_Fill ──[tFill done]──► S_Cap
-S_Cap  ──[tCap done]──►  S_Eject
-S_Eject ──[tEject done]──► S_WaitBottle  (loop)
-Any state ──[Fault]──► S_Fault
-S_Fault ──[Fault cleared]──► S_Idle
-```
+If you want the older Structured Text version, use:
+- `/home/runner/work/CODESY-SIM/CODESY-SIM/src/GVL_vars.st`
+- `/home/runner/work/CODESY-SIM/CODESY-SIM/src/PLC_PRG.st`
