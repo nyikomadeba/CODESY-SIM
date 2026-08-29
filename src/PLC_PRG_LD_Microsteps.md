@@ -118,7 +118,7 @@ This ensures all sequence steps drop out in fault/stop conditions.
 2. Start Control Win runtime.
 3. Login (**Ctrl+L**) and Start (**F5**).
 4. Force/toggle inputs in watch:
-   - StartButton ON then OFF → machine enters wait bottle.
+   - StartButton ON then OFF → `MachineRunning` and `MachineEnabled` go TRUE, then machine enters wait bottle.
    - BottlePresentSensor ON then OFF → fill for 5s.
    - Auto cap 2s, eject 3s, back to wait bottle.
    - LowLiquidLevelSensor ON (or EmergencyStop ON) → fault + alarm.
