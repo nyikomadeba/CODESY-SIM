@@ -10,8 +10,8 @@ with a simple HMI Visualization page for simulation.
 
 ```
 src/
-  PLC_PRG.st           ← Main program (Declaration + Implementation)
-  GVL_vars.st          ← Optional empty GVL (not required for runtime flow)
+  GVL_vars.st          ← Global Variable List (TYPE + VAR_GLOBAL)
+  PLC_PRG.st           ← Main program (implementation only)
   HMI_Visualization.md ← HMI page layout instructions
 README.md
 ```
@@ -23,10 +23,10 @@ README.md
 | Previous error | Root cause | Fix |
 |---|---|---|
 | `Capper : FALSE;` compiler error | Assignment written in Declaration section | Use `:=` in Implementation; use `: BOOL := FALSE;` in Declaration |
-| `tFill_PT : R_TRIG` type mismatch | Wrong type pasted (R_TRIG instead of TIME) | Declare `tFill_PT : TIME := T#5s;` in PLC_PRG declaration |
-| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type mismatch | Use integer state constants (`S_Idle..S_Fault`) in PLC_PRG declaration |
+| `tFill_PT : R_TRIG` type mismatch | Wrong type pasted (R_TRIG instead of TIME) | Changed to `tFill_PT : TIME := T#5s;` in GVL_vars.st |
+| `T_State` / `DED.DEVICE_STATE` confusion | Library enum type used instead of custom | Defined own `T_State` enum in GVL_vars.st |
 | FB calls in Declaration section | ST code pasted into wrong editor tab | All FB calls and assignments are in PLC_PRG Implementation only |
-| `No CASE label found` | STATE labels/type mismatch | Use `State : INT` + matching `VAR CONSTANT` state labels in PLC_PRG declaration |
+| `No CASE label found` | STATE enum declared after or separately from CASE | TYPE declared at top of same GVL, before VAR_GLOBAL |
 
 ---
 
@@ -52,23 +52,32 @@ README.md
 
 - *Project → Library Manager → Add library… → "Standard"*
 
-### 3 — Edit PLC_PRG (core variables now live here)
+### 3 — Create the Global Variable List
 
-1. Open `PLC_PRG` (created automatically with the Standard Project).
-2. Click the **Declaration** tab → paste the Declaration section from
-   `src/PLC_PRG.st` (`VAR CONSTANT ... END_VAR` and `VAR ... END_VAR`).
-3. Click the **Implementation** tab → paste the Implementation section
-   from `src/PLC_PRG.st`.
+1. *Project → Add Object → Global Variable List → name it `GVL_vars`*.
+2. Open `GVL_vars` in the editor (Declaration area).
+3. **Replace** the entire content with the text from `src/GVL_vars.st`.
 4. Save (Ctrl+S).
 
-### 4 — Assign PLC_PRG to MainTask
+### 4 — Edit PLC_PRG
+
+1. Open `PLC_PRG` (created automatically with the Standard Project).
+2. Click the **Declaration** tab → ensure it contains only:
+   ```pascal
+   VAR
+   END_VAR
+   ```
+3. Click the **Implementation** tab → **replace** all content with
+   the text from `src/PLC_PRG.st` (paste everything after the header
+   comment — i.e. from `(* Step 1 *)` onwards).
+4. Save (Ctrl+S).
+
+### 5 — Assign PLC_PRG to MainTask
 
 - *Application → Task Configuration → MainTask → Add POU Instance →
   select `PLC_PRG`* (if not already listed).
-- Ensure the program instance name is `PLC_PRG` so visualization paths
-  like `PLC_PRG.StartPB` resolve directly.
 
-### 5 — Build
+### 6 — Build
 
 - *Build → Build* (Ctrl+F7).
 - Expected: **0 errors, 0 warnings** (or only info-level warnings).
@@ -100,9 +109,6 @@ In summary:
 
 Run this sequence in order on the HMI page:
 
-> Note: E-STOP latches `Fault`; after releasing E-STOP you must pulse
-> **FAULT RESET** to return to `S_Idle`.
-
 | Step | Action | Expected result |
 |------|--------|-----------------|
 | 1 | Click **START** | `RunLatch = TRUE`, `State → S_WaitBottle`, Conveyor ON, Green lamp ON |
@@ -117,7 +123,7 @@ Run this sequence in order on the HMI page:
 
 ---
 
-## Variable quick reference (PLC_PRG declaration)
+## Variable quick reference
 
 | Variable | Type | Purpose |
 |---|---|---|
@@ -136,7 +142,7 @@ Run this sequence in order on the HMI page:
 | `RunLatch` | BOOL | Start/Stop latch |
 | `SystemEnable` | BOOL | Master enable (derived) |
 | `Fault` | BOOL | Fault latch |
-| `State` | INT | State machine state (`S_Idle..S_Fault`) |
+| `State` | T_State | State machine state |
 | `tFill_PT` | TIME | Fill timer preset (default 5 s) |
 | `tCap_PT` | TIME | Cap timer preset (default 2 s) |
 | `tEject_PT` | TIME | Eject timer preset (default 3 s) |
@@ -154,13 +160,3 @@ S_Eject ──[tEject done]──► S_WaitBottle  (loop)
 Any state ──[Fault]──► S_Fault
 S_Fault ──[Fault cleared]──► S_Idle
 ```
-
----
-
-## Notes on declaration scope
-
-- Runtime inputs/outputs, latches, timers, triggers, and state flags are
-  declared in `PLC_PRG` Declaration (POU scope), not required from GVL.
-- `src/GVL_vars.st` is intentionally optional/empty for this simple demo.
-- If you rename the `PLC_PRG` task instance, update HMI bindings from
-  `PLC_PRG.<Variable>` to `<NewInstance>.<Variable>`.
