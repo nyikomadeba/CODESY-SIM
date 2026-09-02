@@ -118,7 +118,7 @@ Run this sequence in order on the HMI page:
 | 5 | Wait 3 s (tEject_PT) | `State → S_WaitBottle` (ready for next bottle) |
 | 6 | Click **STOP** | `RunLatch = FALSE`, `State → S_Idle`, all outputs OFF |
 | 7 | Click **E-STOP** | `Fault = TRUE`, `State → S_Fault`, Red lamp + Alarm ON |
-| 8 | Release E-STOP, click **FAULT RESET** | `Fault = FALSE`, `State → S_Idle` |
+| 8 | Release E-STOP (set `EStop=FALSE`), then click **FAULT RESET** | `Fault = FALSE`, `State → S_Idle` |
 | 9 | Toggle **LOW LEVEL** | `Fault = TRUE`, `State → S_Fault` |
 
 ---
