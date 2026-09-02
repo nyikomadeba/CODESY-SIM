@@ -10,8 +10,8 @@ with a simple HMI Visualization page for simulation.
 
 ```
 src/
-  GVL_vars.st          ← Global Variable List (TYPE + VAR_GLOBAL)
-  PLC_PRG.st           ← Main program (implementation only)
+  GVL_vars.st          ← Legacy Global Variable List example
+  PLC_PRG.st           ← Main program (declaration + implementation)
   HMI_Visualization.md ← HMI page layout instructions
 README.md
 ```
@@ -52,32 +52,22 @@ README.md
 
 - *Project → Library Manager → Add library… → "Standard"*
 
-### 3 — Create the Global Variable List
-
-1. *Project → Add Object → Global Variable List → name it `GVL_vars`*.
-2. Open `GVL_vars` in the editor (Declaration area).
-3. **Replace** the entire content with the text from `src/GVL_vars.st`.
-4. Save (Ctrl+S).
-
-### 4 — Edit PLC_PRG
+### 3 — Edit PLC_PRG
 
 1. Open `PLC_PRG` (created automatically with the Standard Project).
-2. Click the **Declaration** tab → ensure it contains only:
-   ```pascal
-   VAR
-   END_VAR
-   ```
+2. Click the **Declaration** tab → paste the `VAR CONSTANT` and `VAR`
+   blocks from `src/PLC_PRG.st`.
 3. Click the **Implementation** tab → **replace** all content with
-   the text from `src/PLC_PRG.st` (paste everything after the header
-   comment — i.e. from `(* Step 1 *)` onwards).
+   the implementation from `src/PLC_PRG.st` (everything below the
+   declaration guidance comment).
 4. Save (Ctrl+S).
 
-### 5 — Assign PLC_PRG to MainTask
+### 4 — Assign PLC_PRG to MainTask
 
 - *Application → Task Configuration → MainTask → Add POU Instance →
   select `PLC_PRG`* (if not already listed).
 
-### 6 — Build
+### 5 — Build
 
 - *Build → Build* (Ctrl+F7).
 - Expected: **0 errors, 0 warnings** (or only info-level warnings).
